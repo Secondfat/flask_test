@@ -35,51 +35,61 @@ def get_requirment_redis(project_id, page_num, email):
 		key_data = []
 		sort_key_temp = []
 		no_sort_key = []
-		if project_id == "" or project_id == None:
-			pattern = ""
-			key_temp = redis_keys(pattern)
-			if key_temp:
-				no_sort_key.extend(redis_keys(pattern))
-			else:
-				pass
-		elif '|' in project_id:
-			for id_temp in project_id.split('|'):
-				pattern = str(id_temp) + '_*'
+		# 取project_id对应的title_id
+		try:
+			if project_id == "" or project_id == None:
+				pattern = ""
 				key_temp = redis_keys(pattern)
 				if key_temp:
 					no_sort_key.extend(redis_keys(pattern))
 				else:
 					pass
-		else:
-			pattern = str(project_id) + '_*'
-			key_temp = redis_keys(pattern)
-			if key_temp:
-				no_sort_key.extend(redis_keys(pattern))
+			elif '|' in project_id:
+				for id_temp in project_id.split('|'):
+					pattern = str(id_temp) + '_*'
+					key_temp = redis_keys(pattern)
+					if key_temp:
+						no_sort_key.extend(redis_keys(pattern))
+					else:
+						pass
 			else:
-				pass
-		if no_sort_key:
-			for key in no_sort_key:
-				value1 = {}
-				if 'all' in key:
-					pass
+				pattern = str(project_id) + '_*'
+				key_temp = redis_keys(pattern)
+				if key_temp:
+					no_sort_key.extend(redis_keys(pattern))
 				else:
-					mm_temp = time.strptime(redis_Hget(key, 'creat_time'), "%Y-%m-%d %H:%M:%S")
-					value1['title_id'] = key
-					value1['creat_time']= int(time.mktime(mm_temp))
-					sort_key_temp.append(value1)
-			sort_key = sorted(sort_key_temp, key=lambda x: x['creat_time'], reverse = True)
-			begin = everypage * (page_num - 1)
-			end = everypage * page_num
-			if len(sort_key) < begin:
-				return "nodata"
-			elif len(sort_key) >= begin and len(sort_key) < end:
-				for i in range(begin, len(sort_key)):
-					key_data.append(sort_key[i]["title_id"])
-			elif len(sort_key) >= end:
-				for i in range(begin, end):
-					key_data.append(sort_key[i]["title_id"])
+					pass
+		except Exception as e:
+			return code_error('error')
+		# 根据时间倒序逻辑
+		if no_sort_key:
+			try:
+				for key in no_sort_key:
+					value1 = {}
+					if 'all' in key:
+						pass
+					else:
+						mm_temp = time.strptime(redis_Hget(key, 'creat_time'), "%Y-%m-%d %H:%M:%S")
+						value1['title_id'] = key
+						value1['creat_time']= int(time.mktime(mm_temp))
+						sort_key_temp.append(value1)
+				sort_key = sorted(sort_key_temp, key=lambda x: x['creat_time'], reverse = True)#倒序
+				begin = everypage * (page_num - 1)
+				end = everypage * page_num
+				# 根据页码返回对应数据
+				if len(sort_key) < begin:
+					return "nodata"
+				elif len(sort_key) >= begin and len(sort_key) < end:
+					for i in range(begin, len(sort_key)):
+						key_data.append(sort_key[i]["title_id"])
+				elif len(sort_key) >= end:
+					for i in range(begin, end):
+						key_data.append(sort_key[i]["title_id"])
+			except Exception as e:
+				return code_error("error")
 		else:
 			return recdata("")
+		# 取对应title_id拼装返回数据
 		if key_data and key_data != None:
 			for key in key_data:
 				data_key = redis_Hget(key, "data")

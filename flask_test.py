@@ -4,7 +4,7 @@
 from flask import Flask,jsonify,request
 from v1 import *
 from common_ import *
-from urllib.request import quote, unquote
+from urllib.request import unquote
 import logging
 
 logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -59,9 +59,7 @@ def get_requirement():
 		user_name = get_para('user_name', str)
 		page_num = get_para('page_num', int)
 		email = get_para('email', str)
-		if user_name == ""or user_name == None:
-			return err_rec("user_name数据错误")
-		if page_num == 0 or page_num == None:
+		if page_num <= 0 or page_num == None:
 			return err_rec("page_num数据错误")
 		if email == "" or email == None:
 			return err_rec("email数据错误")
@@ -69,7 +67,7 @@ def get_requirement():
 		# project_id = safe_convert(project_id, int, 0)
 		# user_name = safe_convert(user_name, str, "")
 		# page_num = safe_convert(page_num, int, 0)
-		requirement_data = get_requirment_redis(project_id, user_name, page_num, email)
+		requirement_data = get_requirment_redis(project_id, page_num, email)
 		rst = cross_header(jsonify(requirement_data))
 		status = 'ok'
 		return rst
@@ -83,22 +81,16 @@ def get_requirement():
 @app.route('/like_requirement', methods=['GET','POST'])
 def like_requirement():
 	try:
-		#print(request.args.keys())
 		like_type = get_para('like_type', int)
 		user_name = get_para('user_name', str)
 		title_id = get_para('title_id', str)
 		email = get_para('email', str)
-		# like_type = safe_convert(like_type, int, 0)
-		# user_name = safe_convert(user_name, str, "")
-		# title_id = safe_convert(title_id, str, "")
-		if user_name == "" or user_name == None:
-			return err_rec("user_name数据错误")
 		if title_id == "" or title_id == None:
 			return err_rec("title_id数据错误")
 		if like_type == 0 or like_type == None:
 			return err_rec("like_type数据错误")
 		if email == "" or email == None:
-			return err_rec("like_type数据错误")
+			return err_rec("email数据错误")
 		like_do = like_requirement_redis(like_type, email, title_id)
 		rst = cross_header(jsonify(recdata(like_do)))
 		return rst
