@@ -34,29 +34,52 @@ def get_requirment_redis(project_id, page_num, email):
 		get_requirement_list = []
 		key_data = []
 		sort_key_temp = []
-
-		pattern = '[' + str(project_id) + ']_*'
-		no_sort_key = redis_keys(pattern)
-		for key in no_sort_key:
-			value1 = {}
-			if 'all' in key:
-				pass
+		no_sort_key = []
+		if project_id == "" or project_id == None:
+			pattern = ""
+			key_temp = redis_keys(pattern)
+			if key_temp:
+				no_sort_key.extend(redis_keys(pattern))
 			else:
-				mm_temp = time.strptime(redis_Hget(key, 'creat_time'), "%Y-%m-%d %H:%M:%S")
-				value1['title_id'] = key
-				value1['creat_time']= int(time.mktime(mm_temp))
-				sort_key_temp.append(value1)
-		sort_key = sorted(sort_key_temp, key=lambda x: x['creat_time'], reverse = True)
-		begin = everypage * (page_num - 1)
-		end = everypage * page_num
-		if len(sort_key) < begin:
-			return "nodata"
-		elif len(sort_key) >= begin and len(sort_key) < end:
-			for i in range(begin, len(sort_key)):
-				key_data.append(sort_key[i]["title_id"])
-		elif len(sort_key) >= end:
-			for i in range(begin, end):
-				key_data.append(sort_key[i]["title_id"])
+				pass
+		elif '|' in project_id:
+			for id_temp in project_id.split('|'):
+				pattern = str(id_temp) + '_*'
+				key_temp = redis_keys(pattern)
+				if key_temp:
+					no_sort_key.extend(redis_keys(pattern))
+				else:
+					pass
+		else:
+			pattern = str(project_id) + '_*'
+			key_temp = redis_keys(pattern)
+			if key_temp:
+				no_sort_key.extend(redis_keys(pattern))
+			else:
+				pass
+		if no_sort_key:
+			for key in no_sort_key:
+				value1 = {}
+				if 'all' in key:
+					pass
+				else:
+					mm_temp = time.strptime(redis_Hget(key, 'creat_time'), "%Y-%m-%d %H:%M:%S")
+					value1['title_id'] = key
+					value1['creat_time']= int(time.mktime(mm_temp))
+					sort_key_temp.append(value1)
+			sort_key = sorted(sort_key_temp, key=lambda x: x['creat_time'], reverse = True)
+			begin = everypage * (page_num - 1)
+			end = everypage * page_num
+			if len(sort_key) < begin:
+				return "nodata"
+			elif len(sort_key) >= begin and len(sort_key) < end:
+				for i in range(begin, len(sort_key)):
+					key_data.append(sort_key[i]["title_id"])
+			elif len(sort_key) >= end:
+				for i in range(begin, end):
+					key_data.append(sort_key[i]["title_id"])
+		else:
+			return recdata("")
 		if key_data and key_data != None:
 			for key in key_data:
 				data_key = redis_Hget(key, "data")
