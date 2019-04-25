@@ -19,7 +19,7 @@ def add_requirement():
 	add_requirement_data = {}
 	try:
 		if request.method == 'POST':
-			body_value = unquote(request.get_data().decode(encoding='utf-8')).split('&')
+			body_value = request.get_data().decode(encoding='utf-8').split('&')
 			#body_value = unquote(request.get_data().decode(encoding='utf-8')).split('&')
 		else:
 			return jsonify(code_error("Method error"))
@@ -35,13 +35,13 @@ def add_requirement():
 				project_id = safe_convert(arg_value, int, 0)
 			elif arg_key == 'user_name':
 				user_name = safe_convert(arg_value, str, "")
-				add_reqdict['user_name'] = user_name
+				add_reqdict['user_name'] = unquote(user_name)
 			elif arg_key == 'email':
 				email = safe_convert(arg_value, str, "")
-				add_reqdict['email'] = email
+				add_reqdict['email'] = unquote(email)
 			elif arg_key == 'requirement':
 				requirement = safe_convert(arg_value, str, "")
-				add_reqdict['requirement'] = requirement
+				add_reqdict['requirement'] = unquote(requirement)
 		insert_status = add_requirement_redis(project_id, add_reqdict)
 		rst = cross_header(jsonify(recdata(insert_status)))
 		return rst
